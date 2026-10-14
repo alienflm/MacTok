@@ -1,0 +1,41 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
+.venv/
+venv/
+env/
+build/
+dist/
+*.egg-info/
+
+# Local configuration and credentials
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Training outputs and downloaded data/checkpoints
+experiments/
+results*/
+reconstructions/
+samples/
+checkpoints/
+pretrained_models/
+ImageNet/
+wandb/
+*.pt
+*.pth
+*.ckpt
+*.safetensors
+*.npz
+CVPR_MacTok_camera_ready.pdf
+
+# Editors and operating systems
+.DS_Store
+Thumbs.db
+Desktop.ini
+.idea/
+.vscode/
