@@ -223,12 +223,12 @@ def main(args):
         checkpoint = torch.load(args.vq_ckpt, map_location="cpu")
         vae.load_state_dict(load_model_state_dict(checkpoint['model']))
         vae_embed_dim = vae.codebook_embed_dim
-        if args.extra_tokens>0:
-        else:
-            dit_input_size = vae.num_latent_tokens
-        vae_mean = args.vq_mean#vae.vq_mean
-        vae_std = args.vq_std#vae.vq_std
-        vae_string_name = args.vq_ckpt 
+        # Extra tokens are appended when sampling latents, not here, so the DiT
+        # input size always matches the tokenizer's latent token count.
+        dit_input_size = vae.num_latent_tokens
+        vae_mean = args.vq_mean
+        vae_std = args.vq_std
+        vae_string_name = args.vq_ckpt
         vae_1d = True
     else:
         raise NotImplementedError()
@@ -594,7 +594,7 @@ if __name__ == "__main__":
             file_yaml = yaml.YAML()
             config_args = file_yaml.load(f)
             
-            # 不允许被 config 覆盖的参数
+            # Arguments that the YAML config is not allowed to override.
             protected_args = [
                 "dataset", "data_path", "exp_index", "results_dir", "model",
                 "image_size", "num_classes", "epochs", "global_batch_size", "global_seed",
@@ -603,11 +603,10 @@ if __name__ == "__main__":
                 "resume", "disable_compile", "max_grad_norm"
             ]
 
-            # 安全删除 config 中的 protected 参数
+            # Drop protected keys, ignoring those the config does not define.
             for key in protected_args:
                 config_args.pop(key, None)
-                
-            # 设置默认值
+
             parser.set_defaults(**config_args)
     
     # re-parse command-line args to overwrite with any command-line inputs
