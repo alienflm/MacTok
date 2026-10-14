@@ -74,7 +74,7 @@ class ImgLatentDataset(Dataset):
         mean = latents.mean()
         std = latents.std()
         latent_stats = {'mean': mean, 'std': std}
-        print(latent_stats)
+        print(f"[latent-dataset] latent statistics: mean={mean:.6f}, std={std:.6f}")
         return latent_stats
 
     def __len__(self):

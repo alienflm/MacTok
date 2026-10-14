@@ -28,9 +28,9 @@ def normalize_similarity(sim):
     sim_max, _ = sim.max(dim=1, keepdim=True)  # [64, 1]
     denom = sim_max - sim_min
 
-    # 防止除0：denom < 1e-6 时返回全0
+    # Guard against division by zero on near-constant rows.
     mask = denom < 1e-6
-    denom = denom + mask.float() * 1e-6  # 避免除以0
+    denom = denom + mask.float() * 1e-6
 
     sim_norm = (sim - sim_min) / denom
 

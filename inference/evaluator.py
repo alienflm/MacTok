@@ -41,11 +41,11 @@ def main():
     print("warming up TensorFlow...")
     evaluator.warmup()
 
-    # ========== Step 1: 计算 / 加载 Reference Stats ==========
+    # ========== Step 1: compute / load reference stats ==========
     if args.ref_stats_cache and os.path.exists(args.ref_stats_cache):
         print("Loading cached reference statistics...")
         cache = np.load(args.ref_stats_cache, allow_pickle=True)
-        ref_stats = cache["ref_stats"].item()            # 注意：可能需要 .item() 解包
+        ref_stats = cache["ref_stats"].item()  # Unwrap the 0-d object array saved by np.savez.
         ref_stats_spatial = cache["ref_stats_spatial"].item()
         ref_acts = [cache["ref_acts"]]
     else:
@@ -94,7 +94,7 @@ def main():
         f.write(f"Precision: {prec}\n")
         f.write(f"Recall: {recall}\n")
 
-    print(f"评估结果已保存到：{save_path}")
+    print(f"Evaluation results written to {save_path}")
 
     
 

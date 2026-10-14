@@ -120,10 +120,11 @@ def main(args):
         transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5], inplace=True)
     ])
 
-    # dataset = ImageFolderWithFilename(os.path.join(args.data_path, 'train'), transform=transform)
     dataset = ImageFolder(os.path.join(args.data_path, args.split), transform=transform)
-    print(dataset)
-    
+    if rank == 0:
+        print(f"Caching latents for {len(dataset)} images from {os.path.join(args.data_path, args.split)}")
+
+
     sampler = DistributedSampler(
         dataset,
         num_replicas=dist.get_world_size(),

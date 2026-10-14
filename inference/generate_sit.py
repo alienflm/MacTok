@@ -98,16 +98,17 @@ def main(args):
             break
     if compiled_state_dict:
         model = torch.compile(model)
-        keys = model.load_state_dict(state_dict, strict=False)
+        missing_keys, unexpected_keys = model.load_state_dict(state_dict, strict=False)
     else:
-        keys = model.load_state_dict(state_dict, strict=False)
+        missing_keys, unexpected_keys = model.load_state_dict(state_dict, strict=False)
         model = torch.compile(model)
-    print(keys)
+    if missing_keys:
+        print(f"[SiT] missing keys in checkpoint: {len(missing_keys)}")
+    if unexpected_keys:
+        print(f"[SiT] unexpected keys in checkpoint: {len(unexpected_keys)}")
     model = model.to(device)
-    model.eval()  # important!
-    # vae = AutoencoderKL.from_pretrained(f"stabilityai/sd-vae-ft-{args.vae}").to(device)
-    
-    
+    model.eval()  # Disable dropout / stochastic depth before sampling.
+
     assert args.cfg_scale >= 1.0, "In almost all cases, cfg_scale be >= 1.0"
     using_cfg = args.cfg_scale > 1.0
 

@@ -142,24 +142,24 @@ class DecoupleViTEncoder(nn.Module):
         return orders
 
     def random_masking(self, x, orders):
-        """
-        随机生成mask矩阵，mask_ratio从 max(0, Uniform(-0.1, M))中采样。
+        """Build a random mask whose ratio is drawn from ``max(0, U(-0.1, M))``.
 
-        参数：
-            x: 输入特征，形状为 (batch_size, seq_len, embed_dim)
-            orders: 每个样本的token顺序，用于决定哪些token被mask
-            M: mask比率上限（float）
+        Sampling from a distribution with negative support and clipping at zero
+        lets the model occasionally observe fully visible images, which keeps
+        reconstruction quality from degrading under persistent masking.
 
-        返回：
-            mask: (batch_size, seq_len) 的0-1 mask张量
+        Args:
+            x: Input features of shape ``(batch_size, seq_len, embed_dim)``.
+            orders: Per-sample token permutation deciding which tokens are masked.
+
+        Returns:
+            A ``(batch_size, seq_len)`` binary mask tensor.
         """
         bsz, seq_len, embed_dim = x.shape
-        # 从 U(-0.1, M) 中采样一个mask ratio，并做clip处理
+        # Sample a mask ratio from U(-0.1, M) and clip it to [0, M].
         raw_mask_ratio = np.random.uniform(-0.1, self.token_drop)
         mask_rate = max(0.0, raw_mask_ratio)
-        # 计算要mask的token数量
         num_masked_tokens = int(np.ceil(seq_len * mask_rate))
-        # 构造mask矩阵
         mask = torch.zeros(bsz, seq_len, device=x.device)
         mask = torch.scatter(mask, dim=-1, index=orders[:, :num_masked_tokens],
                             src=torch.ones(bsz, num_masked_tokens, device=x.device))
@@ -180,12 +180,11 @@ class DecoupleViTEncoder(nn.Module):
             x = torch.where(mask.bool(), self.mask_token, x)
         elif self.token_drop > 0.0 and self.training and dino_features is not None:
             if torch.rand(1).item() < 0.5:
-                # -------- 随机 mask --------
-                # 生成随机顺序（用于 random_masking）
+                # -------- Random masking --------
                 orders = self.sample_orders(bsz=x.size(0), seq_len=x.size(1)).to(x.device)
                 mask = self.random_masking(x, orders)  # [B, L]
             else:
-                # -------- DINO mask --------
+                # -------- DINO-guided semantic masking --------
                 B,L,D = x.shape
                 aux_feature = dino_features[:, 1:]
                 cls_dino = dino_features[:, :1]
@@ -198,8 +197,8 @@ class DecoupleViTEncoder(nn.Module):
                 _, mask_idx = sim_dino.topk(k, dim=1, largest=True)  # [B, k]
                 mask = torch.zeros_like(sim_dino, dtype=torch.bool)  # [B, L]
                 mask.scatter_(1, mask_idx, True)
-            # 扩展维度 [B, L, 1] 以便广播
-            mask = mask.unsqueeze(-1)        
+            # Expand to [B, L, 1] so the mask broadcasts over the embedding dim.
+            mask = mask.unsqueeze(-1)
             x = torch.where(mask.bool(), self.mask_token, x)
         else:
             mask = None 

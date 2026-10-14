@@ -14,7 +14,7 @@ def build_tokenizer(vq_config,
     
     config_name = vq_config.split('/')[-2]
     
-    # 所有可能传入的参数名列表
+    # Every config key that may be forwarded to the tokenizer constructor.
     possible_args = [
         'image_size', 'codebook_size', 'codebook_embed_dim', 'codebook_l2_norm',
         'commit_loss_beta', 'entropy_loss_ratio', 'vq_loss_ratio', 'kl_loss_weight',
@@ -26,8 +26,7 @@ def build_tokenizer(vq_config,
         'use_ape','use_rope','rope_mixed','rope_theta','dec_cls_token',
     ]
 
-    # 动态组装参数字典，只传入config里存在的属性
-    # 动态组装参数字典
+    # Assemble the keyword arguments, forwarding only keys present in the config.
     params = {}
     for arg in possible_args:
         value = config.get(arg)
@@ -54,9 +53,11 @@ def build_tokenizer(vq_config,
         model_weight = checkpoint["state_dict"]
     else:
         raise Exception("please check model weight")
-    keys = vae.load_state_dict(model_weight, strict=False)
-    print(keys)
-    
+    missing_keys, unexpected_keys = vae.load_state_dict(model_weight, strict=False)
+    if missing_keys:
+        print(f"[tokenizer] missing keys in checkpoint: {len(missing_keys)}")
+    if unexpected_keys:
+        print(f"[tokenizer] unexpected keys in checkpoint: {len(unexpected_keys)}")
 
     vq_1d = False
     if latent_norm:

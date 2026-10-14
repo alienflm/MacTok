@@ -93,8 +93,7 @@ class LPIPSTimm(nn.Module):
                     self.key_depths = [1, 3, 5, 7, 9, 11]
                 elif dino_variants == 'depth4':
                     self.key_depths = [2, 5, 8, 11]
-                print(self.key_depths)
-                
+
                 if dino_variants == 'depth12_no_train':
                     self.key_depths = np.arange(0, 12)
                     self.lins = nn.ModuleList([nn.Identity() for _ in range(12)])
@@ -115,8 +114,9 @@ class LPIPSTimm(nn.Module):
             elif model_name == 'vit_base_patch14_reg4_dinov2.lvd142m':
                 if dino_variants == 'depth12':
                     state_dict = torch.load('checkpoints/dino2b_i256p16_layers12/latest.pth', map_location='cpu')
-            keys = self.load_state_dict(self.get_lin_state_dict(state_dict), strict=False)
-            
+            self.load_state_dict(self.get_lin_state_dict(state_dict), strict=False)
+
+
             for param in self.parameters():
                 param.requires_grad = False
         
@@ -134,7 +134,6 @@ class LPIPSTimm(nn.Module):
                 continue
                 
             new_state_dict[k] = v
-        print(new_state_dict['lins.0.model.1.weight'])
         return new_state_dict
             
             

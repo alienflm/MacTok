@@ -20,7 +20,7 @@ def initialized():
 def initialize(fork=False, backend='nccl', gpu_id_if_not_distibuted=0, timeout=30):
     global __device
     if not torch.cuda.is_available():
-        print(f'[dist initialize] cuda is not available, use cpu instead', file=sys.stderr)
+        print('[dist initialize] cuda is not available, use cpu instead', file=sys.stderr)
         return
     elif 'RANK' not in os.environ:
         torch.cuda.set_device(gpu_id_if_not_distibuted)

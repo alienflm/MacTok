@@ -207,7 +207,7 @@ def main(args):
         total += global_batch_size
 
     if rank == 0:
-        print('\n*************开始计算FID指标**************\n')        
+        print("\nComputing FID...\n")
     fid = compute_fid_score.compute().detach()
     
     # ------------------------------------
@@ -216,22 +216,21 @@ def main(args):
     # Make sure all processes have finished saving their samples
     if dist.is_available() and dist.is_initialized():
         dist.barrier()
-        # all_gather_object 需要传入长度为world_size的list作为容器
+        # all_gather_object needs a list of length world_size as the destination.
         gather_psnr_val = [[] for _ in range(world_size)]
         gather_ssim_val = [[] for _ in range(world_size)]
-        
-        # all_gather_object 会把各个进程的对象放入对应位置
+
+        # Each rank's object is placed at its corresponding index.
         dist.all_gather_object(gather_psnr_val, psnr_val_rgb)
         dist.all_gather_object(gather_ssim_val, ssim_val_rgb)
     else:
-        # 非分布式时，world_size和rank默认值
+        # Single-process fallback: wrap the local results to match the gathered layout.
         gather_psnr_val = [psnr_val_rgb]
         gather_ssim_val = [ssim_val_rgb]
     
 
-    # print(gather_latents)
     if rank == 0:
-    # all_gather_object 会返回嵌套列表，非分布式时无需拆包
+        # Flatten the per-rank nested lists into a single list of values.
         gather_psnr_val = list(itertools.chain(*gather_psnr_val))
         gather_ssim_val = list(itertools.chain(*gather_ssim_val))
         # gather_fid_val = list(itertools.chain(*gather_fid_val))     
