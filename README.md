@@ -325,3 +325,8 @@ This repository builds on several excellent open-source projects:
 - [timm](https://github.com/huggingface/pytorch-image-models)
 
 We thank the authors for making their work available.
+
+## License
+
+Released under the [MIT License](LICENSE). Code derived from the projects listed above remains subject
+to their respective licenses.
